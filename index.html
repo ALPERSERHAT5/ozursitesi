@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Zeynep'e Özür Mesajı</title>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    body {
+      background: radial-gradient(circle at center, #0f172a 0%, #020617 100%);
+      color: #f8fafc;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      position: relative;
+      padding: 16px;
+    }
+
+    #bgCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .card {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      max-width: 420px;
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      border-radius: 24px;
+      padding: 36px 24px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+      text-align: center;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .start-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .badge {
+      padding: 6px 14px;
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      border-radius: 20px;
+      color: #38bdf8;
+      font-size: 0.85rem;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+    }
+
+    .title {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #ffffff;
+      line-height: 1.3;
+    }
+
+    .subtitle {
+      font-size: 0.95rem;
+      color: #94a3b8;
+      line-height: 1.5;
+    }
+
+    .open-btn {
+      background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+      color: #ffffff;
+      border: none;
+      padding: 14px 32px;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 14px;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(2, 132, 199, 0.3);
+      transition: all 0.2s ease;
+      margin-top: 8px;
+    }
+
+    .open-btn:active {
+      transform: scale(0.96);
+    }
+
+    .content-screen {
+      display: none;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+
+    .content-screen.active {
+      display: block;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .message-title {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: #38bdf8;
+      margin-bottom: 14px;
+    }
+
+    .message-text {
+      font-size: 1.05rem;
+      line-height: 1.6;
+      color: #e2e8f0;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .btn-container {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      min-height: 52px;
+    }
+
+    .btn {
+      padding: 14px 24px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border-radius: 12px;
+      cursor: pointer;
+      border: none;
+      transition: background-color 0.2s ease, transform 0.1s ease;
+    }
+
+    .btn-accept {
+      background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+      color: #ffffff;
+      box-shadow: 0 4px 15px rgba(2, 132, 199, 0.3);
+      z-index: 2;
+      flex: 1;
+      max-width: 180px;
+    }
+
+    .btn-accept:active {
+      transform: scale(0.96);
+    }
+
+    .btn-decline {
+      background: rgba(30, 41, 59, 0.8);
+      color: #94a3b8;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      position: relative;
+      z-index: 10;
+      transition: left 0.25s ease, top 0.25s ease, transform 0.1s ease;
+      touch-action: manipulation;
+      flex: 1;
+      max-width: 180px;
+    }
+
+    .plea-message {
+      margin-top: 18px;
+      font-size: 0.9rem;
+      color: #38bdf8;
+      min-height: 22px;
+      font-weight: 500;
+    }
+
+    .result-screen {
+      display: none;
+      text-align: center;
+      padding: 10px 0;
+    }
+
+    .result-title {
+      font-size: 1.7rem;
+      color: #38bdf8;
+      margin-bottom: 12px;
+      font-weight: 700;
+    }
+
+    .result-text {
+      font-size: 1rem;
+      color: #94a3b8;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="bgCanvas"></canvas>
+
+  <div class="card" id="mainCard">
+    <div class="start-screen" id="startScreen">
+      <div class="badge">Sana Bir Notum Var</div>
+      <h2 class="title">Zeynep İçin Özel Mesaj</h2>
+      <p class="subtitle">Aşağıdaki butona dokunarak mesajı okuyabilirsin.</p>
+      <button class="open-btn" onclick="openMessage()">Mesajı Aç</button>
+    </div>
+
+    <div class="content-screen" id="contentScreen">
+      <h1 class="message-title">Zeynep,</h1>
+      <p class="message-text">Yaptığım hatadan dolayı senden içtenlikle özür dilerim. Seni kırdığım için gerçekten üzgünüm, lütfen beni affet.</p>
+      
+      <div class="btn-container" id="btnContainer">
+        <button class="btn btn-accept" onclick="acceptApology()">Özrü Kabul Et</button>
+        <button class="btn btn-decline" id="declineBtn">Kabul Etme</button>
+      </div>
+
+      <div class="plea-message" id="pleaText"></div>
+    </div>
+
+    <div class="result-screen" id="resultScreen">
+      <h2 class="result-title">Teşekkür Ederim!</h2>
+      <p class="result-text">Anlayışın için çok teşekkür ederim. Kendimi affettirmek için elimden geleni yapacağım.</p>
+    </div>
+  </div>
+
+  <script>
+    // Canvas Arka Plan Kalp Efekti
+    const canvas = document.getElementById('bgCanvas');
+    const ctx = canvas.getContext('2d');
+    let width = canvas.width = window.innerWidth;
+    let height = canvas.height = window.innerHeight;
+
+    window.addEventListener('resize', () => {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    });
+
+    class Heart {
+      constructor() {
+        this.reset();
+      }
+
+      reset() {
+        this.x = Math.random() * width;
+        this.y = height + 20 + Math.random() * 40;
+        this.size = Math.random() * 12 + 8;
+        this.speedY = Math.random() * 0.7 + 0.4;
+        this.speedX = Math.sin(Math.random() * Math.PI) * 0.4;
+        this.opacity = Math.random() * 0.35 + 0.15;
+      }
+
+      update() {
+        this.y -= this.speedY;
+        this.x += this.speedX;
+        if (this.y < -30) this.reset();
+      }
+
+      draw() {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.fillStyle = `rgba(56, 189, 248, ${this.opacity})`;
+        ctx.beginPath();
+        const h = this.size * 0.3;
+        ctx.moveTo(0, h);
+        ctx.bezierCurveTo(0, 0, -this.size / 2, 0, -this.size / 2, h);
+        ctx.bezierCurveTo(-this.size / 2, (this.size + h) / 2, 0, this.size, 0, this.size);
+        ctx.bezierCurveTo(0, this.size, this.size / 2, (this.size + h) / 2, this.size / 2, h);
+        ctx.bezierCurveTo(this.size / 2, 0, 0, 0, 0, h);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    const hearts = Array.from({ length: 22 }, () => new Heart());
+
+    function animate() {
+      ctx.clearRect(0, 0, width, height);
+      hearts.forEach(h => {
+        h.update();
+        h.draw();
+      });
+      requestAnimationFrame(animate);
+    }
+    animate();
+
+    function openMessage() {
+      document.getElementById('startScreen').style.display = 'none';
+      document.getElementById('contentScreen').classList.add('active');
+    }
+
+    // Mobil ve Mouse Kaçış Sistemi
+    const declineBtn = document.getElementById('declineBtn');
+    const pleaText = document.getElementById('pleaText');
+    const container = document.getElementById('btnContainer');
+
+    const messages = [
+      "Emin misin?",
+      "Bir daha düşün istersen...",
+      "Lütfen ama...",
+      "Gerçekten çok pişmanım!",
+      "Son bir şans versen?",
+      "Başka seçeneğin kalmadı :)"
+    ];
+    let msgIndex = 0;
+    let attempts = 0;
+
+    function moveButton(e) {
+      if (e) e.preventDefault();
+      attempts++;
+
+      if (msgIndex < messages.length) {
+        pleaText.innerText = messages[msgIndex];
+        msgIndex++;
+      }
+
+      const card = document.getElementById('mainCard');
+      const cardRect = card.getBoundingClientRect();
+      const btnRect = declineBtn.getBoundingClientRect();
+
+      const maxX = cardRect.width - btnRect.width - 40;
+      const maxY = cardRect.height - btnRect.height - 40;
+
+      const randomX = Math.max(10, Math.floor(Math.random() * maxX)) - (cardRect.width / 2 - btnRect.width);
+      const randomY = Math.max(-50, Math.floor(Math.random() * maxY) - 50);
+
+      declineBtn.style.position = 'absolute';
+      declineBtn.style.left = `${randomX}px`;
+      declineBtn.style.top = `${randomY}px`;
+
+      if (attempts >= 6) {
+        setTimeout(() => {
+          declineBtn.style.display = 'none';
+          pleaText.innerText = "Sanırım geriye tek bir buton kaldı...";
+        }, 200);
+      }
+    }
+
+    // Hem Masaüstü (Mouse) Hem Mobil (Dokunma) Desteği
+    declineBtn.addEventListener('mouseenter', moveButton);
+    declineBtn.addEventListener('touchstart', moveButton, { passive: false });
+    declineBtn.addEventListener('click', moveButton);
+
+    function acceptApology() {
+      document.getElementById('contentScreen').style.display = 'none';
+      document.getElementById('resultScreen').style.display = 'block';
+
+      confetti({
+        particleCount: 80,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#0284c7', '#38bdf8', '#94a3b8', '#ffffff']
+      });
+    }
+  </script>
+</body>
+</html>
